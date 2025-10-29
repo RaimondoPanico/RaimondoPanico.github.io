@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calcolo Fattore di Rischio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <h1>Calcolo Fattore di Rischio</h1>
+  <!-- Caricamento e visualizzazione delle combo con i vari parametri necessari per il calcolo del rischio -->
+  <label for="probability">Probabilità (P)</label>
+  <!-- Caricamento combo probabilità -->
+  <select id="probability" aria-label="Probabilità">
+    <option value="1">1 - Molto improbabile</option>
+    <option value="2">2 - Improbabile</option>
+    <option value="3">3 - Possibile</option>
+    <option value="4">4 - Probabile</option>
+    <option value="5">5 - Molto probabile</option>
+  </select>
+
+  <label for="severity">Gravità (D)</label>
+  <!-- Caricamento combo gravità -->
+  <select id="severity" aria-label="Gravità">
+    <option value="1">1 - Lieve</option>
+    <option value="2">2 - Moderata</option>
+    <option value="3">3 - Grave</option>
+    <option value="4">4 - Molto grave</option>
+    <option value="5">5 - Catastrofico</option>
+  </select>
+
+  <label for="exposure">Esposizione (E)</label>
+    <!-- Caricamento combo esposizione -->
+  <select id="exposure" aria-label="Esposizione">
+    <option value="1">1 - Occasionale</option>
+    <option value="2">2 - Rara</option>
+    <option value="3">3 - Periodica</option>
+    <option value="4">4 - Frequente</option>
+    <option value="5">5 - Continua</option>
+  </select>
+
+  <!-- Visualizzazione dei due button con le relative azioni -->
+  <button onclick="calcolaRischio()">Calcola Rischio</button>
+  <button onclick="generaPDF()">Download PDF Rischio</button> <!-- pulsante download PDF -->
+
+  <div id="result" class="result" role="alert" aria-live="polite"></div>
+
+  <!-- Visualizzazione del link per il download del pdf esplicativo per il calcolo del rischio -->
+  <div class="download">
+    <a href="CalcoloRischio.pdf" download>
+      Scarica il modello di valutazione del rischio
+    </a>
+  </div>
+  
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+
+	
+let currentRisk = null;
+
+function calcolaRischio() {
+  // Funzione per il calcolo del fattore di rschio.
+  // Acquisizione dei parametri selezionati.
+  const P = parseInt(document.getElementById('probability').value);
+  const S = parseInt(document.getElementById('severity').value);
+  const E = parseInt(document.getElementById('exposure').value);
+  // Calcolo del rischio.
+  const R = P * S * E;
+  let color = [];
+
+  const resultDiv = document.getElementById('result');
+  let riskLevel = '';
+  let riskClass = '';
+  // Analisi del rischio.
+  if (R <= 4) {
+    riskLevel = 'Basso';
+    riskClass = 'low';
+    color = [128, 255, 0]; 
+  } else if (R <= 9) {
+    riskLevel = 'Medio';
+    riskClass = 'medium';
+    color = [255, 255, 0]; 
+  } else if (R <= 16) {
+    riskLevel = 'Alto';
+    riskClass = 'high';
+    color = [255, 128, 64]; 
+  } else {
+    riskLevel = 'Estremo';
+    riskClass = 'extreme';
+    color = [255, 0, 0]; 
+  }
+
+  currentRisk = {P, S, E, R, riskLevel, color};
+  // Visualizzazione del risultato dell'analisi.
+  resultDiv.textContent = `Rischio calcolato: ${R} → Livello: ${riskLevel}`;
+  resultDiv.className = `result ${riskClass}`;
+}
+
+function generaPDF() {
+  // Funzione per la generazione del file pdf contenente il rischio calcolato.
+  if (!currentRisk) {
+    alert("Per generare il PDF, bisogna calcolare prima il rischio.");
+    return;
+  }
+  // Creazione oggetto per la generazione del file pdf.
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  // Scrittura dei vari parametri selezionati e calcolati.
+  doc.setFont("helvetica");
+  doc.setFontSize(16);
+  doc.text("Relazione Valutazione del Rischio", 20, 20);
+
+  doc.setFontSize(12);
+  doc.text(`Probabilità (P): ${currentRisk.P}`, 20, 40);
+  doc.text(`Gravità (S): ${currentRisk.S}`, 20, 50);
+  doc.text(`Esposizione (E): ${currentRisk.E}`, 20, 60);
+  doc.text(`Fattore di Rischio (R = P D E): ${currentRisk.R}`, 20, 70);
+  doc.text(`Livello di rischio: ${currentRisk.riskLevel}`, 20, 80);
+
+  // Messaggio esplicativo relativo al rischio calcolato.
+  let interpretation = "";
+  let nomeFileRischio = "relazione_valutazione_rischio.pdf";
+  switch(currentRisk.riskLevel) {
+    case 'Basso':
+      interpretation = "Rischio Basso: situazione generalmente sicura. Continuare le buone pratiche,\nmonitoraggio minimo, mantenimento delle condizioni di sicurezza.";
+      break;
+    case 'Medio':
+      interpretation = "Rischio Medio: adottare misure preventive, formazione specifica,\ncontrolli periodici, aggiornamento delle procedure operative.";
+      break;
+    case 'Alto':
+      interpretation = "Rischio Alto: misure preventive urgenti e rigorose, revisione delle attrezzature,\naggiornamento delle procedure di lavoro.";
+      break;
+    case 'Estremo':
+      interpretation = "Rischio Estremo: interventi immediati obbligatori ed indilazionabili, sospensione delle attività pericolose,\nprotezioni totali, controlli continui e formazione intensiva.";
+      break;
+  }
+
+  doc.setFontSize(12);
+  doc.text("Interpretazione dettagliata:", 20, 100);
+  doc.setFontSize(11);
+  doc.text(interpretation, 20, 110, {maxWidth: 170});
+  // Salvataggio del file.
+  doc.save(nomeFileRischio);
+}
+
+</script>
+
+</body>
+</html>
