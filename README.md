@@ -1,3 +1,3 @@
-Project Work Raimondo Panico /n
-E' possibile accedere direttamente al progetto cliccando questo link
+Project Work Raimondo Panico.
+È possibile accedere direttamente al progetto cliccando questo link
 https://raimondopanico.github.io/
